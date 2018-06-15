@@ -1,0 +1,13 @@
+{
+  "name": "werow-console",
+  "version": "0.1",
+  "main": "index.js",
+  "author": "Marco Nett",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "ar": "^0.0.1",
+    "decompress": "^4.2.0",
+    "node-fetch": "^2.1.2"
+  }
+}
