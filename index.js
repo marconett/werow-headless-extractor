@@ -4,6 +4,7 @@ var fs = require('fs');
 var fetch = require('node-fetch');
 var decompress = require('decompress');
 var ar = require('ar');
+var lzma = require('lzma-native').createDecompressor({synchronous: true});
 var path = require('path');
 
 
@@ -26,9 +27,9 @@ const saveFile = (res) => {
   });
 };
 
-const unzipFile = (file) => {
+const unpackGeneric = (file, path = '.') => {
   return new Promise((resolve, reject) => {
-    decompress(file, '.').then((files) => {
+    decompress(file, path).then((files) => {
       resolve(files);
     }).catch((err) => {
       reject(err);
@@ -67,6 +68,20 @@ const unpackDeb = (file) => {
   });
 };
 
+const unpackXz = (file) => {
+  return new Promise((resolve, reject) => {
+    var input = fs.createReadStream(file);
+    var output = fs.createWriteStream('data.tar');
+    input.pipe(lzma).pipe(output)
+      .on('unpipe', function () {
+        resolve('data.tar');
+      })
+      .on('error', function (err) {
+        reject(err);
+      });
+  });
+};
+
 const changeFileExtension = (file, ext) => {
   var arr = file.split('.');
   arr.pop();
@@ -85,18 +100,20 @@ const changeFileExtension = (file, ext) => {
 };
 
 fileExists('./linux.zip')
-  .then((file) => { unzipFile(file)
+  .then((file) => { unpackGeneric(file)
     .then(files => { unpackDeb(files)
-      .then(file => { unzipFile(file)
-        .then(res => console.log(res))
-        .catch(err => console.log(err));
+      .then(file => { unpackXz(file)
+        .then(file => { unpackGeneric(file, 'data')
+          .then(res => console.log(res))
+          .catch(err => console.log(err));
+        });
       });
     });
   })
   .catch(() => {
     fetch(url)
       .then(res => saveFile(res))
-      .then((file) => { unzipFile(file)
+      .then((file) => { unpackGeneric(file)
         .then(res => console.log(res));
       });
   });

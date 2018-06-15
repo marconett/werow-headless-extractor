@@ -30,5 +30,6 @@ npm-debug.log
 yarn-error.log
 
 # Application specific files
+data/
 linux/
 linux.zip
