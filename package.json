@@ -7,6 +7,7 @@
   "private": false,
   "dependencies": {
     "ar": "^0.0.1",
+    "asar": "^0.14.3",
     "decompress": "^4.2.0",
     "lzma-native": "^3.0.8",
     "node-fetch": "^2.1.2"

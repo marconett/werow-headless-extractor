@@ -6,6 +6,7 @@ var decompress = require('decompress');
 var ar = require('ar');
 var lzma = require('lzma-native').createDecompressor({synchronous: true});
 var path = require('path');
+var asar = require('asar');
 
 
 const url = 'https://www.nohrd.com/pub/media/we-row/version/linux.zip';
@@ -82,6 +83,17 @@ const unpackXz = (file) => {
   });
 };
 
+const unpackAsar = (file, dest) => {
+  return new Promise((resolve, reject) => {
+    try {
+      asar.extractAll(file, dest);
+      resolve(dest);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 const genericFindFile = (pathsArray, fileName) => {
   return new Promise((resolve, reject) => {
     const result = pathsArray.filter(paths => {
@@ -116,14 +128,60 @@ const changeFileExtension = (file, ext) => {
   });
 };
 
+const replaceFiles = (srcDir) => {
+  return new Promise((resolve, reject) => {
+    try {
+      fs.writeFileSync('./'+srcDir+'/.babelrc', fs.readFileSync('./.bablerc-copy'));
+      fs.writeFileSync('./'+srcDir+'/main.js', fs.readFileSync('./main.js-copy'));
+      resolve('done');
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+// copied from https://gist.github.com/geedew/cf66b81b0bcdab1f334b
+const deleteFolderRecursive = (path) => {
+  if( fs.existsSync(path) ) {
+    fs.readdirSync(path).forEach(function(file){
+      var curPath = path + '/' + file;
+      if(fs.lstatSync(curPath).isDirectory()) {
+        deleteFolderRecursive(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(path);
+  }
+};
+
+const cleanup = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      fs.unlinkSync('./data.tar');
+      deleteFolderRecursive('./linux');
+      deleteFolderRecursive('./data');
+      resolve('Done.\nProject patched and extracted to folder \'headless-rower/\'');
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 fileExists('./linux.zip')
-  .then((file) => { unpackGeneric(file)
+  .then(file => { unpackGeneric(file)
     .then(files => { unpackDeb(files)
       .then(file => { unpackXz(file)
-        .then(file => { unpackGeneric(file, 'data')
+        .then(file => { unpackGeneric(file, 'data/')
          .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-           .then(res => console.log(res))
-           .catch(err => console.log(err));
+          .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
+            .then(srcDir => { replaceFiles(srcDir)
+              .then(() => { cleanup()
+                .then(res => console.log(res))
+                .catch(err => console.log(err));
+              });
+            });
+          });
          });
         });
       });
@@ -131,8 +189,24 @@ fileExists('./linux.zip')
   })
   .catch(() => {
     fetch(url)
-      .then(res => saveFile(res))
-      .then((file) => { unpackGeneric(file)
-        .then(res => console.log(res));
+      .then(res => { saveFile(res)
+        .then(file => { unpackGeneric(file)
+          .then(files => { unpackDeb(files)
+            .then(file => { unpackXz(file)
+              .then(file => { unpackGeneric(file, 'data/')
+               .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
+                .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
+                  .then(srcDir => { replaceFiles(srcDir)
+                    .then(() => { cleanup()
+                      .then(res => console.log(res))
+                      .catch(err => console.log(err));
+                    });
+                  });
+                });
+               });
+              });
+            });
+          });
+        });
       });
   });

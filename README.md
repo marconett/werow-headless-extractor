@@ -1,15 +1,11 @@
-# Usage of this patch utility
+# Usage of this patch tool
 
 * `yarn install`
 * `node .`
 
 # Usage of patched project
-* `yarn add serialport --build-from-source`
-* `yarn install`
-* Socket open on Port 8448
-
-# TODO
-
-3. Add babel-preset-env and babel-register to dev dependencies
-3. replace .bablerc with .bablerc-copy
-3. replace main.js main.js-copy
+* `cd headless-rower/`
+* `yarn add serialport --build-from-source` (Build *node-serialport* for your platform)
+* `yarn add babel-preset-env babel-register`
+* `node .`
+* A WebSocket is now open on port 8448. If you connect your WaterRower via USB and point your Browser to <https://we-row.mynohrd.com/dashboard>, you can start your workout without the Electron app.
