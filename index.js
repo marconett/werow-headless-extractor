@@ -82,6 +82,23 @@ const unpackXz = (file) => {
   });
 };
 
+const genericFindFile = (pathsArray, fileName) => {
+  return new Promise((resolve, reject) => {
+    const result = pathsArray.filter(paths => {
+      var file = paths.path.split('/');
+      return (file[file.length-1] === fileName);
+    });
+
+    if (result === undefined || result.length <= 0) {
+      reject(fileName +' not found');
+    } else if (result.length > 1) {
+      reject('multiple files with name ' + fileName + ' found');
+    } else {
+      resolve(result[0]);
+    }
+  });
+};
+
 const changeFileExtension = (file, ext) => {
   var arr = file.split('.');
   arr.pop();
@@ -104,8 +121,10 @@ fileExists('./linux.zip')
     .then(files => { unpackDeb(files)
       .then(file => { unpackXz(file)
         .then(file => { unpackGeneric(file, 'data')
-          .then(res => console.log(res))
-          .catch(err => console.log(err));
+         .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
+           .then(res => console.log(res))
+           .catch(err => console.log(err));
+         });
         });
       });
     });
