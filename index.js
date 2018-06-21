@@ -162,7 +162,7 @@ const cleanup = () => {
       fs.unlinkSync('./data.tar');
       deleteFolderRecursive('./linux');
       deleteFolderRecursive('./data');
-      resolve('Done.\nProject patched and extracted to folder \'headless-rower/\'');
+      resolve('Done.\nProject patched and extracted to folder \'werow-headless-rower/\'');
     } catch (err) {
       reject(err);
     }
@@ -176,7 +176,7 @@ fileExists('./linux.zip')
       .then(file => { unpackXz(file)
         .then(file => { unpackGeneric(file, 'data/')
           .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-            .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
+            .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
               .then(srcDir => { replaceFiles(srcDir)
                 .then(() => { cleanup()
                   .then(res => console.log(res))
@@ -197,7 +197,7 @@ fileExists('./linux.zip')
           .then(file => { unpackXz(file)
             .then(file => { unpackGeneric(file, 'data/')
               .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-                .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
+                .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
                   .then(srcDir => { replaceFiles(srcDir)
                     .then(() => { cleanup()
                       .then(res => console.log(res))
