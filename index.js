@@ -111,6 +111,7 @@ const genericFindFile = (pathsArray, fileName) => {
   });
 };
 
+// unsused. might be useful at some point
 const changeFileExtension = (file, ext) => {
   var arr = file.split('.');
   arr.pop();
@@ -168,33 +169,34 @@ const cleanup = () => {
   });
 };
 
+// Choo choo! All aboard the promise train!
 fileExists('./linux.zip')
   .then(file => { unpackGeneric(file)
     .then(files => { unpackDeb(files)
       .then(file => { unpackXz(file)
         .then(file => { unpackGeneric(file, 'data/')
-         .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-          .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
-            .then(srcDir => { replaceFiles(srcDir)
-              .then(() => { cleanup()
-                .then(res => console.log(res))
-                .catch(err => console.log(err));
+          .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
+            .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
+              .then(srcDir => { replaceFiles(srcDir)
+                .then(() => { cleanup()
+                  .then(res => console.log(res))
+                  .catch(err => console.log(err));
+                });
               });
             });
           });
-         });
         });
       });
     });
   })
   .catch(() => {
     fetch(url)
-      .then(res => { saveFile(res)
-        .then(file => { unpackGeneric(file)
-          .then(files => { unpackDeb(files)
-            .then(file => { unpackXz(file)
-              .then(file => { unpackGeneric(file, 'data/')
-               .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
+    .then(res => { saveFile(res)
+      .then(file => { unpackGeneric(file)
+        .then(files => { unpackDeb(files)
+          .then(file => { unpackXz(file)
+            .then(file => { unpackGeneric(file, 'data/')
+              .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
                 .then(file => { unpackAsar('data/'+file.path, 'headless-rower')
                   .then(srcDir => { replaceFiles(srcDir)
                     .then(() => { cleanup()
@@ -203,10 +205,10 @@ fileExists('./linux.zip')
                     });
                   });
                 });
-               });
               });
             });
           });
         });
       });
+    });
   });
