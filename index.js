@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 var fs = require('fs');
+var path = require('path');
+
 var fetch = require('node-fetch');
+
 var decompress = require('decompress');
 var ar = require('ar');
 var lzma = require('lzma-native').createDecompressor({synchronous: true});
-var path = require('path');
 var asar = require('asar');
 
 
@@ -193,9 +195,9 @@ const cleanup = () => {
   });
 };
 
-// Choo choo! All aboard the promise train!
-fileExists('./linux.zip')
-  .then(file => { unpackGeneric(file)
+// Choo choo! All aboard the promise chain!
+const promiseChain = (file) => {
+  unpackGeneric(file)
     .then(files => { unpackDeb(files)
       .then(file => { unpackXz(file)
         .then(file => { unpackGeneric(file, 'data/')
@@ -218,33 +220,14 @@ fileExists('./linux.zip')
         });
       });
     });
-  })
+};
+
+
+fileExists('./linux.zip')
+  .then(file => promiseChain(file))
   .catch(() => {
     fetch(url)
     .then(res => { saveFile(res)
-      .then(file => { unpackGeneric(file)
-        .then(files => { unpackDeb(files)
-          .then(file => { unpackXz(file)
-            .then(file => { unpackGeneric(file, 'data/')
-              .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-                .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
-                  .then(srcDir => { replaceFile('./.bablerc-copy', './'+srcDir+'/.babelrc')
-                    .then(() => { replaceFile('./main.js-copy', './'+srcDir+'/main.js')
-                      .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x000a/g, '000a')
-                        .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x04d8/g, '04d8')
-                          .then(() => { cleanup()
-                            .then(res => console.log(res))
-                            .catch(err => console.log(err));
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
+      .then(file => promiseChain(file));
     });
   });
