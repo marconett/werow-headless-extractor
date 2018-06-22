@@ -96,6 +96,17 @@ const unpackAsar = (file, dest) => {
   });
 };
 
+const packAsar = (folder, dest) => {
+  return new Promise((resolve, reject) => {
+    try {
+      asar.createPackage(folder, dest);
+      resolve(dest);
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
 const genericFindFile = (pathsArray, fileName) => {
   return new Promise((resolve, reject) => {
     const result = pathsArray.filter(paths => {
