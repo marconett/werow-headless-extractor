@@ -129,11 +129,10 @@ const changeFileExtension = (file, ext) => {
   });
 };
 
-const replaceFiles = (srcDir) => {
+const replaceFile = (srcFile, destFile) => {
   return new Promise((resolve, reject) => {
     try {
-      fs.writeFileSync('./'+srcDir+'/.babelrc', fs.readFileSync('./.bablerc-copy'));
-      fs.writeFileSync('./'+srcDir+'/main.js', fs.readFileSync('./main.js-copy'));
+      fs.writeFileSync(destFile, fs.readFileSync(srcFile));
       resolve('done');
     } catch (err) {
       reject(err);
@@ -154,6 +153,31 @@ const deleteFolderRecursive = (path) => {
     });
     fs.rmdirSync(path);
   }
+};
+
+const patchFileRegex = (file, regex, replace) => {
+  return new Promise((resolve, reject) => {
+    try {
+      fs.readFile(file, 'utf8', (err, data) => {
+        if (err) throw err;
+        try {
+          var result = data.replace(regex, replace);
+          fs.writeFile(file, result, 'utf8', (err) => {
+            if (err) {
+              throw err;
+            } else {
+              resolve(file);
+            }
+          });
+        } catch (err) {
+          throw err;
+        }
+        if (err) throw err;
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
 
 const cleanup = () => {
@@ -177,10 +201,16 @@ fileExists('./linux.zip')
         .then(file => { unpackGeneric(file, 'data/')
           .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
             .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
-              .then(srcDir => { replaceFiles(srcDir)
-                .then(() => { cleanup()
-                  .then(res => console.log(res))
-                  .catch(err => console.log(err));
+              .then(srcDir => { replaceFile('./.bablerc-copy', './'+srcDir+'/.babelrc')
+                .then(() => { replaceFile('./main.js-copy', './'+srcDir+'/main.js')
+                  .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x000a/g, '000a')
+                    .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x04d8/g, '04d8')
+                      .then(() => { cleanup()
+                        .then(res => console.log(res))
+                        .catch(err => console.log(err));
+                      });
+                    });
+                  });
                 });
               });
             });
@@ -198,10 +228,16 @@ fileExists('./linux.zip')
             .then(file => { unpackGeneric(file, 'data/')
               .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
                 .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
-                  .then(srcDir => { replaceFiles(srcDir)
-                    .then(() => { cleanup()
-                      .then(res => console.log(res))
-                      .catch(err => console.log(err));
+                  .then(srcDir => { replaceFile('./.bablerc-copy', './'+srcDir+'/.babelrc')
+                    .then(() => { replaceFile('./main.js-copy', './'+srcDir+'/main.js')
+                      .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x000a/g, '000a')
+                        .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x04d8/g, '04d8')
+                          .then(() => { cleanup()
+                            .then(res => console.log(res))
+                            .catch(err => console.log(err));
+                          });
+                        });
+                      });
                     });
                   });
                 });
