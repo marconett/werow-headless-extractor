@@ -4,11 +4,11 @@ This downloads the linux version of the [We-Row software](https://www.nohrd.com/
 
 It then patches the extracted node package so it is compatible with *node-serialport* >= 5.0.0 (which makes it incompatible with prior versions) and replaces Electron specific code with the Bable transpiler.
 
-You then need to go ahead and update the extracted node packages dependencies (most importantly *node-serialport*) and add the Babel transpiler.
+You then need to go ahead and manually update the extracted node packages dependencies (most importantly *node-serialport*) and add the Babel transpiler.
 
 You can now use the USB-to-WebSocket-Bridge and the [We-Row website](https://we-row.mynohrd.com/) without the official Electron app.
 
-I wrote this becasue I didn't want to violate any copyright by publishing the extracted node package itself. I really didn't like the Electron app and it's outdated dependencies, as newer *node-serialport* versions have fixes for a bunch memory-leaks and performance issues.
+I wrote this because I didn't want to violate any copyright by publishing the extracted node package itself. I really didn't like the Electron app and it's outdated dependencies, as newer *node-serialport* versions have fixes for a bunch memory-leaks and performance issues.
 
 ## Usage
 
