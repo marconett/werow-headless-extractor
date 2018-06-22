@@ -96,6 +96,7 @@ const unpackAsar = (file, dest) => {
   });
 };
 
+// unsused. might be useful at some point
 const packAsar = (folder, dest) => {
   return new Promise((resolve, reject) => {
     try {
