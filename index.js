@@ -10,9 +10,6 @@ var ar = require('ar');
 var lzma = require('lzma-native').createDecompressor({synchronous: true});
 var asar = require('asar');
 
-
-const url = 'https://www.nohrd.com/pub/media/we-row/version/linux.zip';
-
 const saveFile = (res) => {
   return new Promise((resolve, reject) => {
     const file = './linux.zip';
@@ -41,12 +38,12 @@ const unpackGeneric = (file, path = '.') => {
 };
 
 const fileExists = (file) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     fs.stat(file, (err) => {
       if(err == null) {
-        resolve(file);
+        resolve(true);
       } else {
-        reject(err);
+        resolve(false);
       }
     });
   });
@@ -207,39 +204,32 @@ const cleanup = () => {
   });
 };
 
-// Choo choo! All aboard the promise chain!
-const promiseChain = (file) => {
-  unpackGeneric(file)
-    .then(files => { unpackDeb(files)
-      .then(file => { unpackXz(file)
-        .then(file => { unpackGeneric(file, 'data/')
-          .then(pathsArray => { genericFindFile(pathsArray, 'app.asar')
-            .then(file => { unpackAsar('data/'+file.path, 'werow-headless-rower')
-              .then(srcDir => { replaceFile('./.bablerc-copy', './'+srcDir+'/.babelrc')
-                .then(() => { replaceFile('./main.js-copy', './'+srcDir+'/main.js')
-                  .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x000a/g, '000a')
-                    .then(() => { patchFileRegex('./werow-headless-rower/src/io/serial.js', /0x04d8/g, '04d8')
-                      .then(() => { cleanup()
-                        .then(res => console.log(res))
-                        .catch(err => console.log(err));
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+const main = async () => {
+
+  const url = 'https://www.nohrd.com/pub/media/we-row/version/linux.zip';
+  let zipFile = './linux.zip';
+
+  if(!await fileExists(zipFile)) {
+    let res = await fetch(url);
+    await saveFile(res);
+  }
+
+  // unpack
+  let debFile = await unpackGeneric(zipFile);
+  let xzFile = await unpackDeb(debFile);
+  let tarFile = await unpackXz(xzFile);
+  let pathsArray = await unpackGeneric(tarFile, 'data/');
+  let asarFile = await genericFindFile(pathsArray, 'app.asar');
+  let rowerDir = await unpackAsar('data/'+asarFile.path, 'werow-headless-rower');
+
+  // patch
+  replaceFile('./.bablerc-copy', './'+rowerDir+'/.babelrc');
+  replaceFile('./main.js-copy', './'+rowerDir+'/main.js');
+  await patchFileRegex('./'+rowerDir+'/src/io/serial.js', /0x000a/g, '000a');
+  await patchFileRegex('./'+rowerDir+'/src/io/serial.js', /0x04d8/g, '04d8');
+
+  // cleanup
+  console.log(await cleanup());
 };
 
-
-fileExists('./linux.zip')
-  .then(file => promiseChain(file))
-  .catch(() => {
-    fetch(url)
-    .then(res => { saveFile(res)
-      .then(file => promiseChain(file));
-    });
-  });
+main();
